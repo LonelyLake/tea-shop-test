@@ -4,30 +4,39 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
+        // Multibranch Pipeline сам клонирует репо, но на всякий случай:
         checkout scm
       }
     }
 
-    stage('Build with Docker-Compose') {
+    stage('Build Services') {
       steps {
-        // Собираем образы по docker-compose.yml
+        // Убедимся, что docker-compose видит файлы
+        sh 'ls -R .'
+
+        // Собираем backend и frontend
         sh 'docker-compose -f docker-compose.yml build'
       }
     }
 
     stage('Run Tests') {
       steps {
-        // Поднимаем сервисы, выполняем тесты, сворачиваем
+        // Поднимаем всё в фоне
+        sh 'docker-compose -f docker-compose.yml up -d'
+
+        // Пример: если в backend у вас тесты через pytest
         sh '''
-          docker-compose -f docker-compose.yml up -d
-          # Предположим, ваш основной сервис называется "tea-shop"
-          docker exec tea-shop sh -c "./run_tests.sh"
-          docker-compose -f docker-compose.yml down
+          # Ждём, пока бекенд поднимется (опционально, лучше проверить таймаутами)
+          sleep 5
+          docker-compose -f docker-compose.yml exec backend pytest --maxfail=1 --disable-warnings -q
         '''
+
+        // Останавливаем и удаляем контейнеры
+        sh 'docker-compose -f docker-compose.yml down'
       }
     }
 
-    stage('Push Images (main only)') {
+    stage('Push Images') {
       when { branch 'main' }
       steps {
         withCredentials([usernamePassword(
@@ -37,6 +46,7 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            # Предварительно в docker-compose.yml для каждого сервиса укажите image: yourrepo/backend и yourrepo/frontend
             docker-compose -f docker-compose.yml push
           '''
         }
@@ -46,6 +56,7 @@ pipeline {
 
   post {
     always {
+      // Очищаем workspace, чтобы не копились артефакты
       cleanWs()
     }
   }
