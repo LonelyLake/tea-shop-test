@@ -4,6 +4,7 @@ services:
   backend:
     build:
       context: ./backend
+    image: lonelylake/tea-shop-backend:main
     ports:
       - "5000:5000"
     networks:
@@ -14,6 +15,7 @@ services:
   frontend:
     build:
       context: ./frontend
+    image: lonelylake/tea-shop-frontend:main
     ports:
       - "3000:3000"
     depends_on:
