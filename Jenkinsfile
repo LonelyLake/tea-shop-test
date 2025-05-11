@@ -43,14 +43,14 @@ pipeline {
         when { branch 'main' }
         steps {
             withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-creds',
-            usernameVariable: 'DOCKER_USER',
-            passwordVariable: 'DOCKER_PASS'
+                credentialsId: 'dockerhub-creds',  // ID, которое вы указали при добавлении
+                usernameVariable: 'DOCKER_USER',   // Переменная для логина
+                passwordVariable: 'DOCKER_PASS'    // Переменная для пароля
             )]) {
-            sh '''
-                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                docker compose -f docker-compose.yml push
-            '''
+                sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker compose -f docker-compose.yml push
+                '''
             }
         }
     }
