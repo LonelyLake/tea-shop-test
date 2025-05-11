@@ -15,7 +15,7 @@ pipeline {
         sh 'ls -R .'
 
         // Собираем backend и frontend
-        sh 'docker-compose -f docker-compose.yml build'
+        sh 'docker compose -f docker-compose.yml build'
       }
     }
 
@@ -29,31 +29,30 @@ pipeline {
     stage('Run Tests') {
         steps {
             sh '''
-            docker-compose -f docker-compose.yml up -d
+            docker compose -f docker-compose.yml up -d
             # Ждём поднятия
             sleep 5
             # -T отключает TTY
-            docker-compose -f docker-compose.yml exec -T backend pytest --maxfail=1 --disable-warnings -q
-            docker-compose -f docker-compose.yml down
+            docker compose -f docker-compose.yml exec -T backend pytest --maxfail=1 --disable-warnings -q
+            docker compose -f docker-compose.yml down
             '''
         }
     }
 
     stage('Push Images') {
-      when { branch 'main' }
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-creds',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          sh '''
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            # Предварительно в docker-compose.yml для каждого сервиса укажите image: yourrepo/backend и yourrepo/frontend
-            docker-compose -f docker-compose.yml push
-          '''
+        when { branch 'main' }
+        steps {
+            withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-creds',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PASS'
+            )]) {
+            sh '''
+                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                docker compose -f docker-compose.yml push
+            '''
+            }
         }
-      }
     }
   }
 
