@@ -27,20 +27,16 @@ pipeline {
     
 
     stage('Run Tests') {
-      steps {
-        // Поднимаем всё в фоне
-        sh 'docker-compose -f docker-compose.yml up -d'
-
-        // Пример: если в backend у вас тесты через pytest
-        sh '''
-          # Ждём, пока бекенд поднимется (опционально, лучше проверить таймаутами)
-          sleep 5
-          docker-compose -f docker-compose.yml exec backend pytest --maxfail=1 --disable-warnings -q
-        '''
-
-        // Останавливаем и удаляем контейнеры
-        sh 'docker-compose -f docker-compose.yml down'
-      }
+        steps {
+            sh '''
+            docker-compose -f docker-compose.yml up -d
+            # Ждём поднятия
+            sleep 5
+            # -T отключает TTY
+            docker-compose -f docker-compose.yml exec -T backend pytest --maxfail=1 --disable-warnings -q
+            docker-compose -f docker-compose.yml down
+            '''
+        }
     }
 
     stage('Push Images') {
