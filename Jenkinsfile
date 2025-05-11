@@ -43,7 +43,7 @@ pipeline {
         when { branch 'main' }
         steps {
             withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',  // ID, которое вы указали при добавлении
+                credentialsId: 'docker-token',  // ID, которое вы указали при добавлении
                 usernameVariable: 'DOCKER_USER',   // Переменная для логина
                 passwordVariable: 'DOCKER_PASS'    // Переменная для пароля
             )]) {
