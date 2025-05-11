@@ -19,6 +19,13 @@ pipeline {
       }
     }
 
+    stage('Debug workspace') {
+        steps {
+            sh 'ls -R .'
+        }
+    }
+    
+
     stage('Run Tests') {
       steps {
         // Поднимаем всё в фоне
