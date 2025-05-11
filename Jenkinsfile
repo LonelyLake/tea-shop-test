@@ -8,26 +8,26 @@ pipeline {
       }
     }
 
-    stage('Build with Docker Compose') {
+    stage('Build with Docker-Compose') {
       steps {
-        // Собираем все сервисы, описанные в docker-compose.yml
-        sh 'docker compose -f docker-compose.yml build'
+        // Собираем образы по docker-compose.yml
+        sh 'docker-compose -f docker-compose.yml build'
       }
     }
 
     stage('Run Tests') {
       steps {
-        // Поднимаем контейнер(ы) в фоне, ждём доступности, запускаем тесты
+        // Поднимаем сервисы, выполняем тесты, сворачиваем
         sh '''
-          docker compose -f docker-compose.yml up -d
-          # здесь ваш скрипт тестов, например:
+          docker-compose -f docker-compose.yml up -d
+          # Предположим, ваш основной сервис называется "tea-shop"
           docker exec tea-shop sh -c "./run_tests.sh"
-          docker compose -f docker-compose.yml down
+          docker-compose -f docker-compose.yml down
         '''
       }
     }
 
-    stage('Push Image (main only)') {
+    stage('Push Images (main only)') {
       when { branch 'main' }
       steps {
         withCredentials([usernamePassword(
@@ -37,8 +37,7 @@ pipeline {
         )]) {
           sh '''
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            # docker compose push, если в yml прописан image & push
-            docker compose -f docker-compose.yml push
+            docker-compose -f docker-compose.yml push
           '''
         }
       }
